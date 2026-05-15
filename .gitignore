@@ -1,0 +1,17 @@
+.venv/
+venv/
+# 本地便携 FFmpeg（勿提交；用 pip static-ffmpeg 或系统 PATH）
+.tools/
+__pycache__/
+*.pyc
+.env
+output/**
+!output/.gitkeep
+vendor/**
+!vendor/.gitkeep
+_vendor_video_zebra/
+*.mp4
+*.mkv
+*.webm
+*.vtt
+*.srt
