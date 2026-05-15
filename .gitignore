@@ -1,4 +1,6 @@
+.cursor/
 .venv/
+.venv-coqui/
 venv/
 # 本地便携 FFmpeg（勿提交；用 pip static-ffmpeg 或系统 PATH）
 .tools/
@@ -7,6 +9,8 @@ __pycache__/
 .env
 output/**
 !output/.gitkeep
+youtobe pipeline/output/**
+!youtobe pipeline/output/.gitkeep
 vendor/**
 !vendor/.gitkeep
 _vendor_video_zebra/
@@ -15,3 +19,4 @@ _vendor_video_zebra/
 *.webm
 *.vtt
 *.srt
+*.log
