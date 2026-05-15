@@ -1,15 +1,18 @@
-# Youtobe
+# Youtobe VidTranslateAI
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/license-use%20responsibly-orange)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Repo](https://img.shields.io/badge/GitHub-Youtobe--VidTranslateAI-181717?logo=github)](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
 
-**本机一站式：YouTube 下载 → 英文字幕（或 Whisper）→ 中译 → 双语字幕 → 中文配音 → 软/硬成片；可选在成片后再导出观看倍速版。**
+**本机一站式 YouTube 视频译制：下载 → 英文字幕（或 Whisper）→ 英译中 → 双语字幕 → 中文 AI 配音 → 软/硬成片；可选在成片后再导出观看倍速版。**
 
-输出默认在 `output/raw/<视频ID>/` 与 `output/processed/<视频ID>/`。翻译与 TTS 可走多家云厂商或免费兜底，详见下文与 `env.example`。
+> 仓库地址：[github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
+
+输出默认在 `output/raw/<视频ID>/` 与 `output/processed/<视频ID>/`。翻译与 TTS 可走多家云厂商或免费兜底；下载 YouTube、调用翻译/TTS 接口需本机联网（国内常需配置代理，见 `env.example`）。
 
 ---
 
-## 为什么选择 Youtobe？
+## 为什么选择 Youtobe VidTranslateAI？
 
 | 能力 | 说明 |
 |------|------|
@@ -26,8 +29,8 @@
 ### 1. 克隆与虚拟环境
 
 ```powershell
-git clone https://github.com/<你的用户名>/Youtobe.git
-cd Youtobe
+git clone https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI.git
+cd Youtobe-VidTranslateAI
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -172,6 +175,7 @@ python scripts/mux_dub_subs.py output/raw/<id>/<id>.mp4 output/processed/<id>/<i
 - 可安装 **Node / Deno** 以改善部分站点的 JS 挑战提取，见 [yt-dlp EJS](https://github.com/yt-dlp/yt-dlp/wiki/EJS)。
 
 ---
+
 
 
 ## 合规说明
