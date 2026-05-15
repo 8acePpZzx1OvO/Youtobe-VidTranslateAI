@@ -173,46 +173,6 @@ python scripts/mux_dub_subs.py output/raw/<id>/<id>.mp4 output/processed/<id>/<i
 
 ---
 
-## 推送到 GitHub（**私密**仓库）
-
-当前环境未检测到 **`gh` CLI**，且推送必须使用**你的** GitHub 凭据，无法由助手代你完成登录。任选其一即可。
-
-### 方式 A：网页创建 + Git 命令行
-
-1. 打开 [GitHub → New repository](https://github.com/new)，仓库名例如 `Youtobe`，勾选 **Private**，**不要**勾选「Add a README」（本地已有）。
-2. 在项目根执行（将 `你的用户名` 换成实际 GitHub 用户名）：
-
-```powershell
-cd F:\project\Youtobe
-git init
-git add -A
-git commit -m "Initial commit: Youtobe pipeline and documentation"
-git branch -M main
-git remote add origin https://github.com/你的用户名/Youtobe.git
-git push -u origin main
-```
-
-若已开启 2FA，请使用 **Personal Access Token** 代替密码。
-
-### 方式 B：GitHub CLI（一条命令创建私密库并推送）
-
-```powershell
-winget install GitHub.cli
-gh auth login
-cd F:\project\Youtobe
-git init
-git add -A
-git commit -m "Initial commit: Youtobe pipeline and documentation"
-gh repo create Youtobe --private --source=. --remote=origin --push
-```
-
----
-
-## Claude Code Skill（可选）
-
-将 `skills/youtube-en-to-cn` 复制到 `%USERPROFILE%\.claude\skills\youtube-en-to-cn` 即可在 Claude Code 中引用。
-
----
 
 ## 合规说明
 
