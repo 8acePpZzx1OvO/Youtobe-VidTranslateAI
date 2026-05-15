@@ -33,42 +33,48 @@ git clone https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI.git
 cd Youtobe-VidTranslateAI
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pip install -r requirements-pro.txt
+pip install -r "youtobe pipeline/requirements.txt"
+pip install -r "youtobe pipeline/requirements-pro.txt"
 ```
 
-**说明：** `requirements-pro.txt` 在基础包之上增加 **faster-whisper**（无字幕时 ASR）与 **static-ffmpeg**（自带 `ffmpeg`/`ffprobe`，供 pydub 与部分脚本使用）。只做「有字幕、不配音」时可只装 `requirements.txt`，但推荐一次性装齐。仓库**不包含**本地目录 `.tools/`（若你自行解压过便携 FFmpeg，勿提交；已在 `.gitignore` 中排除）。
+**说明：** 译制主程序在 **`youtobe pipeline/`** 目录下；请在同一终端中 `cd "youtobe pipeline"` 后再执行 `python run.py ...`（见下文「一条命令全流程」）。`requirements-pro.txt` 在基础包之上增加 **faster-whisper**（无字幕时 ASR）与 **static-ffmpeg**（自带 `ffmpeg`/`ffprobe`，供 pydub 与部分脚本使用）。只做「有字幕、不配音」时可只装 `requirements.txt`，但推荐一次性装齐。仓库**不包含**本地目录 `.tools/`（若你自行解压过便携 FFmpeg，勿提交；已在 `.gitignore` 中排除）。
 
 ### 2. 配置环境变量
 
 ```powershell
-copy env.example .env
-# 用编辑器打开 .env，至少配置一种翻译 Key（见下文「环境变量」）
+copy "youtobe pipeline\env.example" "youtobe pipeline\.env"
+# 用编辑器打开 youtobe pipeline\.env，至少配置一种翻译 Key（见下文「环境变量」）
 ```
 
 ### 3. 一条命令全流程（推荐）
 
 ```powershell
+cd "youtobe pipeline"
 python run.py "https://www.youtube.com/watch?v=视频ID" --full
 ```
 
 - **`--full`**：等价 `--bilingual --dub-zh`，生成双语 SRT、中文配音、软字幕 MP4 与**硬烧双语+中文配音**成片（默认开启硬烧）。
 
+以下 `python run.py ...` 均假定当前目录为 **`youtobe pipeline`**。
+
 **无 YouTube 字幕时**（yt-dlp 提示没有字幕轨）：
 
 ```powershell
+cd "youtobe pipeline"
 python run.py "https://youtu.be/视频ID" --full --asr-whisper
 ```
 
 **成片后再导出 1.5× 观看版**（额外生成 `*_x1p5.mp4` 等，**不修改** SRT）：
 
 ```powershell
+cd "youtobe pipeline"
 python run.py "https://youtu.be/视频ID" --full --video-speed 1.5
 ```
 
 **已有 `en.srt` / `zh.srt`，只补配音与成片：**
 
 ```powershell
+cd "youtobe pipeline"
 python run.py --finalize-only 视频ID
 ```
 
@@ -145,7 +151,7 @@ python run.py --finalize-only 视频ID
 
 ## 环境变量（`.env`）
 
-完整模板见 **`env.example`**。常用项：
+完整模板见 **`youtobe pipeline/env.example`**。常用项：
 
 - **翻译**：`DEEPL_API_KEY`、`MICROSOFT_API_KEY` + `AZURE_TRANSLATOR_REGION`、`OPENAI_API_KEY`、阿里云、腾讯云等（`smart` 优先级见 `env.example` 顶部注释）。
 - **下载**：`YOUTOBE_YTDLP_PROXY`、`YOUTOBE_YTDLP_CONCURRENT_FRAGMENTS` 等。
@@ -157,6 +163,7 @@ python run.py --finalize-only 视频ID
 ## 分步脚本（排错）
 
 ```powershell
+cd "youtobe pipeline"
 python scripts/download.py "<URL>" -o output/raw
 python scripts/vtt_to_srt.py output/raw/<id>/<id>.en.vtt output/processed/<id>/<id>.en.srt
 python scripts/translate_srt.py output/processed/<id>/<id>.en.srt output/processed/<id>/<id>.zh.srt --engine smart --resume
@@ -176,7 +183,25 @@ python scripts/mux_dub_subs.py output/raw/<id>/<id>.mp4 output/processed/<id>/<i
 
 ---
 
+## 仓库与协作
 
+- **主页**：[https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
+- **克隆**：`git clone https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI.git`
+- 与远程同步：先 `git fetch origin`，再 `git pull origin main --rebase`（有冲突时解决后 `git rebase --continue`），最后 `git push origin main`；国内 HTTPS 常需本机代理（如 `set HTTPS_PROXY=http://127.0.0.1:端口`）。
+
+在 GitHub 仓库页右侧 **About → 编辑** 中，建议将 **Description** 设为（约 350 字以内）：
+
+```text
+本机 Python 工具链：YouTube 下载、英译中、双语字幕、中文 AI 配音与硬烧成片；支持 Whisper 无字幕识别与成片后倍速。详见 README。
+```
+
+---
+
+## Claude Code Skill（可选）
+
+将 `youtobe pipeline/skills/youtube-en-to-cn` 复制到 `%USERPROFILE%\.claude\skills\youtube-en-to-cn` 即可在 Claude Code 中引用。
+
+---
 
 ## 合规说明
 
