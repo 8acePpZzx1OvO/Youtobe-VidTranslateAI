@@ -24,6 +24,7 @@ OUT_RAW = ROOT / "output" / "raw"
 OUT_PROC = ROOT / "output" / "processed"
 sys.path.insert(0, str(SCRIPTS))
 from youtobe_layout import (  # noqa: E402
+    ensure_ffmpeg_on_path,
     minimize_outputs_enabled,
     minimize_proc_dir,
     minimize_raw_dir,
@@ -43,6 +44,10 @@ def _default_video_speed() -> float:
         return float((os.getenv("YOUTOBE_VIDEO_SPEED") or "1.0").strip())
     except ValueError:
         return 1.0
+
+
+def _default_dub_keep_background() -> bool:
+    return (os.getenv("YOUTOBE_DUB_KEEP_ORIGINAL_BG", "").strip().lower() in ("1", "true", "yes", "on"))
 
 
 def _speed_basename_suffix(speed: float) -> str:
@@ -66,12 +71,7 @@ def _load_pipeline_env() -> None:
 def main() -> None:
     _load_pipeline_env()
 
-    try:
-        import static_ffmpeg
-
-        static_ffmpeg.add_paths()
-    except ImportError:
-        pass
+    ensure_ffmpeg_on_path()
 
     ap = argparse.ArgumentParser(description="YouTube 下载 + 英译中 + 双语字幕 + 中文配音")
     ap.add_argument(
@@ -307,6 +307,15 @@ def main() -> None:
             "软字幕成片等中间产物（默认在硬烧成片成功后会精简目录，便于搬运归档）"
         ),
     )
+    ap.add_argument(
+        "--dub-keep-background",
+        action=argparse.BooleanOptionalAction,
+        default=_default_dub_keep_background(),
+        help=(
+            "成片音轨：保留原片声音 + 口播时段 duck 压低 + 中文 TTS（默认 duck，见 YOUTOBE_DUB_BG_MODE）；"
+            "关：--no-dub-keep-background；默认读 YOUTOBE_DUB_KEEP_ORIGINAL_BG。"
+        ),
+    )
 
     args = ap.parse_args()
 
@@ -355,6 +364,10 @@ def main() -> None:
         fo.extend(["--video-speed", str(args.video_speed)])
         if args.keep_intermediate:
             fo.append("--keep-intermediate")
+        if args.dub_keep_background:
+            fo.append("--dub-keep-background")
+        else:
+            fo.append("--no-dub-keep-background")
         _run(*fo)
         return
 
@@ -508,6 +521,22 @@ def main() -> None:
             str(args.dub_concurrency),
             *dub_x,
         )
+        mux_audio = dub_audio
+        if args.dub_keep_background:
+            mixed = proc_base / f"{stem}.dub_zh_bgmix.m4a"
+            print(
+                "配音混音: 保留原片音轨 + 口播时段压低 + 中文 TTS …",
+                file=sys.stderr,
+            )
+            _run(
+                "mix_dub_background.py",
+                str(video),
+                str(dub_audio),
+                str(mixed),
+                "--en-srt",
+                str(en_srt),
+            )
+            mux_audio = mixed
         zh_dubsync = proc_base / f"{stem}.zh.dubsync.srt"
         zh_for_bi = zh_dubsync if zh_dubsync.exists() else zh_srt
         if zh_for_bi != zh_srt:
@@ -517,18 +546,18 @@ def main() -> None:
             )
         _run("merge_bilingual_srt.py", str(en_srt), str(zh_for_bi), str(bi_srt))
         if args.no_soft_subs:
-            _run("mux_dub_subs.py", str(video), str(dub_audio), str(final_dub))
+            _run("mux_dub_subs.py", str(video), str(mux_audio), str(final_dub))
         else:
             _run(
                 "mux_dub_subs.py",
                 str(video),
-                str(dub_audio),
+                str(mux_audio),
                 str(final_dub),
                 "--subs",
                 str(bi_srt),
             )
         if not args.no_hard_bilingual:
-            _run("mux_dub_subs.py", str(video), str(dub_audio), str(temp_av))
+            _run("mux_dub_subs.py", str(video), str(mux_audio), str(temp_av))
             _run("burn_subtitles.py", str(temp_av), str(bi_srt), str(hard_dub))
             temp_av.unlink(missing_ok=True)
 

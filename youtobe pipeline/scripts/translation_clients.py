@@ -986,11 +986,13 @@ def zh_reading_time_align_batch(
     model: str | None = None,
     base_url: str | None = None,
     timeout: float = 130.0,
+    squeeze_round: int = 0,
 ) -> list[str]:
     """
     翻译后：按英文字幕槽位 slot_sec，把中文稿的「预估朗读负载」拉到合理区间。
     items: (english_line, chinese_line, slot_seconds, issue)，issue 为 \"over\" 或 \"under\"。
     over: 压缩中文，避免配音吞字；under: 略作充实口语化，减少句内过长留白（不灌水）。
+    squeeze_round: 多轮对齐时递增（0 起），逐轮收紧 over 的 target_units 上限，减少「改了仍 over」。
     """
     if not items:
         return []
@@ -1022,6 +1024,17 @@ def zh_reading_time_align_batch(
         model=model,
         fallback_openai_model="gpt-4o-mini",
     )
+    sq = max(0, min(int(squeeze_round), 6))
+    squeeze_note = ""
+    if sq >= 1:
+        squeeze_note = (
+            f" Pass {sq}: prior edits still left many 'over' lines — compress MORE aggressively for over: "
+            "drop subordinate clauses, replace wordy phrases with short oral Chinese, keep one clause per line when possible. "
+        )
+    if sq >= 3:
+        squeeze_note += (
+            "For over items you MUST land at or below target_units_hi; if still long, remove secondary examples and hedging. "
+        )
     sys_prompt = (
         "You edit Simplified Chinese SUBTITLE lines for spoken pacing vs English on-screen duration. "
         "The goal is Chinese neural TTS dubbing that fits the same time window as each English line: "
@@ -1034,7 +1047,8 @@ def zh_reading_time_align_batch(
         "- If issue is under: expand zh with natural connectives so new zh_units moves into "
         "[target_units_lo, target_units_hi] (spoken est near target_est_sec_hi without exceeding slot_sec). "
         "Do not add filler 呃嗯啊, no meta, no newlines. Preserve names/brands. Same number of items and order. "
-        'Output ONLY JSON: {"lines":["...","..."]} with len(lines)==len(items).'
+        + squeeze_note
+        + 'Output ONLY JSON: {"lines":["...","..."]} with len(lines)==len(items).'
     )
     payload_items: list[dict[str, object]] = []
     for en, zh, slot, issue in items:
@@ -1044,7 +1058,9 @@ def zh_reading_time_align_batch(
         est = u_now / cps if cps > 1e-6 else 0.0
         if issue == "over":
             lo = max(0.8, mid * 0.42)
-            hi = max(lo + 0.25, mid * 0.92)
+            # 默认上限约 0.92*mid；squeeze_round 升高时逐轮收紧，迫使模型删冗余
+            over_hi = max(0.62, 0.92 - 0.055 * float(sq))
+            hi = max(lo + 0.25, mid * over_hi)
             tlo = lo / cps if cps > 1e-6 else 0.0
             thi = hi / cps if cps > 1e-6 else 0.0
         else:
@@ -1078,7 +1094,7 @@ def zh_reading_time_align_batch(
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": user_payload},
                 ],
-                temperature=0.28,
+                temperature=(0.22 if sq >= 2 else 0.24 if sq >= 1 else 0.28),
                 timeout=timeout,
             )
             if content.startswith("```"):

@@ -1,8 +1,8 @@
-# Youtobe Pro：在 requirements.txt 基础上增加本地 ASR（无 YouTube 字幕时）可选依赖
+# Youtobe Pro: requirements.txt + optional local ASR when YouTube has no subs
 -r requirements.txt
 
 faster-whisper>=1.0.0
-# 无系统 FFmpeg 时：自带 ffmpeg + ffprobe（dub_zh / pydub / asr 抽音频均可用）
+# Bundled ffmpeg/ffprobe if not on PATH (dub_zh, pydub, asr)
 static-ffmpeg>=0.2.0
-# 若需与 video-Zebra-china 一致的火山「文本翻译」SDK（当前 Youtobe 主流程仍用 translate_srt 多后端）：
+# Optional Volcengine text translation SDK (main flow uses translate_srt):
 # volcengine-python-sdk>=1.0.0

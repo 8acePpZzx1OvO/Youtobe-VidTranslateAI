@@ -11,6 +11,15 @@
 
 ## 最近变更（倒序，新条目插在最上）
 
+### 2026-05-16 — 成片音轨：duck 保留原声（默认），替代 Demucs 为主方案
+
+| 项 | 内容 |
+|----|------|
+| **动机** | Demucs 难以稳定「只留背景」；用户希望保留完整原片环境声，仅在原片口播时段压低原声再叠中文 TTS。 |
+| **实现** | `mix_dub_background.py` 默认 `YOUTOBE_DUB_BG_MODE=duck`：按 `.en.srt` 时间轴 ffmpeg `volume=eval` 动态 duck + `amix` 配音；`demucs` 仍可选。 |
+| **修改** | `run.py` / `finish_outputs.py` 混音时传 `--en-srt`；`env.example` 增加 `YOUTOBE_DUB_DUCK_*`；`requirements-dub-background.txt` 仅 demucs 需要。 |
+| **验证** | `python scripts/mix_dub_background.py <mp4> <dub.m4a> <out.m4a> --en-srt <en.srt>`；全流程 `--dub-keep-background`。 |
+
 ### 2026-05-16 — 配音时间轴：去重叠 + 超长句切分（修复 60–90s 滔滔不绝/长静音）
 
 | 项 | 内容 |

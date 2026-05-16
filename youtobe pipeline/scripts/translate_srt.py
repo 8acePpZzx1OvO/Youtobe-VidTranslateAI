@@ -386,8 +386,8 @@ def _maybe_apply_reading_time_align(
         )
         return
 
-    max_passes = int(os.getenv("YOUTOBE_TRANSLATE_READING_ALIGN_PASSES", "3").strip() or "3")
-    max_passes = max(1, min(max_passes, 5))
+    max_passes = int(os.getenv("YOUTOBE_TRANSLATE_READING_ALIGN_PASSES", "5").strip() or "5")
+    max_passes = max(1, min(max_passes, 8))
     chunk_sz = int(os.getenv("YOUTOBE_TRANSLATE_READING_ALIGN_CHUNK", "12").strip() or "12")
     chunk_sz = max(4, min(chunk_sz, 18))
 
@@ -409,7 +409,12 @@ def _maybe_apply_reading_time_align(
         def _call_align(indices: list[int]) -> list[str] | None:
             it = _one_items(indices)
             try:
-                zh_new = zh_reading_time_align_batch(it, api_key=None, chars_per_sec_budget=cps)
+                zh_new = zh_reading_time_align_batch(
+                    it,
+                    api_key=None,
+                    chars_per_sec_budget=cps,
+                    squeeze_round=pass_num,
+                )
             except Exception as e:
                 print(f"朗读时长对齐: API 失败 ({e})，尝试拆批…", file=sys.stderr)
                 return None
@@ -476,14 +481,21 @@ def _maybe_apply_reading_time_align(
         if not need_idx:
             break
 
+        late_chunk = int(os.getenv("YOUTOBE_TRANSLATE_READING_ALIGN_CHUNK_LATE", "0").strip() or "0")
+        eff_chunk = (
+            max(4, min(late_chunk, 18))
+            if late_chunk >= 4 and pass_num >= 2
+            else (max(4, chunk_sz // 2) if pass_num >= 2 else chunk_sz)
+        )
+
         pass_changed = 0
-        for a in range(0, len(need_idx), chunk_sz):
-            batch_i = need_idx[a : a + chunk_sz]
+        for a in range(0, len(need_idx), eff_chunk):
+            batch_i = need_idx[a : a + eff_chunk]
             pass_changed += _apply_batch_indices(batch_i, rows, cps)
             dst.parent.mkdir(parents=True, exist_ok=True)
             out.save(str(dst), encoding="utf-8")
             print(
-                f"  朗读对齐已保存: {min(a + chunk_sz, len(need_idx))}/{len(need_idx)} 条本轮待处理",
+                f"  朗读对齐已保存: {min(a + eff_chunk, len(need_idx))}/{len(need_idx)} 条本轮待处理",
                 file=sys.stderr,
             )
             time.sleep(max(sleep_s, 0.18))

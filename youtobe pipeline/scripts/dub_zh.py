@@ -137,12 +137,9 @@ def _sanitize_tts_text(s: str) -> str:
 
 def _bootstrap_ffmpeg_path() -> None:
     """无系统 FFmpeg 时，用 pip 的 static-ffmpeg 注入 PATH（含 ffprobe，供 pydub 使用）。"""
-    try:
-        import static_ffmpeg
+    from youtobe_layout import ensure_ffmpeg_on_path
 
-        static_ffmpeg.add_paths()
-    except ImportError:
-        pass
+    ensure_ffmpeg_on_path()
 
 
 def _ensure_ffmpeg_tools() -> None:

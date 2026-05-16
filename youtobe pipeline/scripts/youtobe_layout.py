@@ -18,6 +18,18 @@ import shutil
 from pathlib import Path
 
 
+def ensure_ffmpeg_on_path() -> None:
+    """PATH 上已有 ffmpeg 则跳过，避免 static-ffmpeg 从 GitHub 拉包超时。"""
+    if shutil.which("ffmpeg"):
+        return
+    try:
+        import static_ffmpeg
+
+        static_ffmpeg.add_paths()
+    except Exception:
+        pass
+
+
 def minimize_outputs_enabled() -> bool:
     """默认开启精简；YOUTOBE_MINIMIZE_OUTPUTS=0 关闭。"""
     v = (os.getenv("YOUTOBE_MINIMIZE_OUTPUTS") or "1").strip().lower()

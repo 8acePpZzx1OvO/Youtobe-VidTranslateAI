@@ -52,12 +52,9 @@ def main() -> None:
             load_dotenv(fd, override=False)
         load_dotenv(ROOT / ".env", override=True)
 
-    try:
-        import static_ffmpeg
+    from youtobe_layout import ensure_ffmpeg_on_path
 
-        static_ffmpeg.add_paths()
-    except ImportError:
-        pass
+    ensure_ffmpeg_on_path()
 
     try:
         import pysrt  # noqa: F401
@@ -199,6 +196,16 @@ def main() -> None:
         ),
     )
     ap.add_argument(
+        "--dub-keep-background",
+        action=argparse.BooleanOptionalAction,
+        default=os.getenv("YOUTOBE_DUB_KEEP_ORIGINAL_BG", "").strip().lower()
+        in ("1", "true", "yes", "on"),
+        help=(
+            "成片音轨：保留原片声音，英文字幕时段压低原声再叠中文配音（默认 duck）；"
+            "关：--no-dub-keep-background"
+        ),
+    )
+    ap.add_argument(
         "--keep-intermediate",
         action="store_true",
         help="不精简 processed/raw（默认成功出硬烧片后会删除中间产物，仅留 en/zh SRT 与硬烧成片）",
@@ -305,6 +312,23 @@ def main() -> None:
             *dub_extra,
         )
 
+    mux_audio = dub_audio
+    if args.dub_keep_background and dub_audio.exists():
+        mixed = proc_base / f"{stem}.dub_zh_bgmix.m4a"
+        print(
+            "配音混音: 保留原片音轨 + 口播时段压低 + 中文 TTS …",
+            file=sys.stderr,
+        )
+        _run(
+            "mix_dub_background.py",
+            str(video),
+            str(dub_audio),
+            str(mixed),
+            "--en-srt",
+            str(en_srt),
+        )
+        mux_audio = mixed
+
     zh_for_bi = zh_dubsync if zh_dubsync.exists() else zh_srt
     if zh_for_bi != zh_srt:
         print(f"合并双语: 使用口播对齐中文稿 {zh_for_bi.name}", file=sys.stderr)
@@ -316,14 +340,14 @@ def main() -> None:
         _run(
             "mux_dub_subs.py",
             str(video),
-            str(dub_audio),
+            str(mux_audio),
             str(soft_out),
             "--subs",
             str(bi_srt),
         )
 
     print("生成硬烧双语 + 中文配音成片（任意播放器可见字幕）…", file=sys.stderr)
-    _run("mux_dub_subs.py", str(video), str(dub_audio), str(temp_av))
+    _run("mux_dub_subs.py", str(video), str(mux_audio), str(temp_av))
     _run("burn_subtitles.py", str(temp_av), str(bi_srt), str(hard_out))
     temp_av.unlink(missing_ok=True)
 
@@ -385,6 +409,8 @@ def main() -> None:
         print(f"  双语 SRT: {bi_srt}", file=sys.stderr)
     if dub_audio.exists():
         print(f"  中文配音轨: {dub_audio}", file=sys.stderr)
+    if mux_audio.resolve() != dub_audio.resolve() and mux_audio.exists():
+        print(f"  成片用混音轨(背景+TTS): {mux_audio}", file=sys.stderr)
     if abs(float(args.video_speed) - 1.0) >= 1e-9:
         sfx = _speed_basename_suffix(float(args.video_speed))
         print(
