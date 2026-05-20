@@ -1,0 +1,17 @@
+# VideoLingo 依赖安装说明
+#
+# 1. 基础（必装）:
+#    pip install -r pipeline/requirements.txt
+#
+# 2. PyTorch + WhisperX + Demucs（译制必装，见官方 install.py）:
+#    cd pipeline
+#    python install.py
+#
+# 若 install.py 交互失败，可手动:
+#    pip install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+#    pip install whisperx>=3.8.1
+#    pip install --no-deps "demucs[dev] @ git+https://github.com/adefossez/demucs"
+#
+# 3. spaCy 语言模型（首次运行可能提示下载）:
+#    python -m spacy download en_core_web_md
+#    python -m spacy download zh_core_web_md

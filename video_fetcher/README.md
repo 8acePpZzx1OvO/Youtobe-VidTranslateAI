@@ -1,8 +1,30 @@
 # video_fetcher
 
-批量拉取列表中的视频 URL 时，请与根目录 **`youtobe pipeline/run.py --full`** 的输出约定对齐：
+批量拉取列表中的视频 URL 时，请与根目录 **`pipeline/run.py --full`** 的输出约定对齐：
 
 - **`output/raw/<视频ID>/`**：流水线成功且未加 `--keep-intermediate` 时，仅保留 **`<视频ID>.mp4`**（原片）。
 - **`output/processed/<视频ID>/`**：仅保留 **`<视频ID>.en.srt`**、**`<视频ID>.zh.srt`**、**`<视频ID>_zh_dub_hard_bilingual.mp4`**（及可选倍速副本 `*_x…*.mp4`）。
 
 需要保留 VTT、双语 SRT、软字幕 MP4、单独配音轨时，运行 `run.py` / `finish_outputs.py` 时加上 **`--keep-intermediate`**，或设置 **`YOUTOBE_MINIMIZE_OUTPUTS=0`**。
+
+安装与入口（在仓库根目录）：`pip install -e .` → `python -m video_fetcher fetch|batch|pipeline|workflow …`
+
+### 搬运全流程（推荐）
+
+```powershell
+cd "f:\project\youtube-vid-translate"
+# 单条
+python -m video_fetcher workflow "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# 频道最近 5 条（下载+译配+归档）
+python -m video_fetcher workflow "https://www.youtube.com/@LaughOverLife" --limit 5
+```
+
+完成后目录约定：
+
+| 路径 | 保留文件 |
+|------|----------|
+| `pipeline/output/raw/<id>/` | 仅 `<id>.mp4` |
+| `pipeline/output/processed/<id>/` | `<id>.bilingual.srt` + `<id>_zh_dub_hard_bilingual.mp4` |
+
+译配需已配置 `pipeline/.env`（如 `DEEPSEEK_API_KEY`、TTS 等）。

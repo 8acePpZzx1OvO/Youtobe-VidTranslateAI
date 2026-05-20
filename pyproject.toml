@@ -1,0 +1,50 @@
+[build-system]
+
+requires = ["setuptools>=61"]
+
+build-backend = "setuptools.build_meta"
+
+
+
+[project]
+
+name = "youtube-vid-translate"
+
+version = "0.1.0"
+
+description = "YouTube 搬运：VideoLingo 译配 (pipeline) + video_fetcher + content_hub"
+
+readme = "README.md"
+
+requires-python = ">=3.10"
+
+dependencies = [
+
+    "yt-dlp>=2024.1.0",
+
+]
+
+
+
+[project.optional-dependencies]
+
+pipeline = ["python-dotenv>=1.0.0", "ruamel.yaml>=0.18.0"]
+
+content-hub = ["python-dotenv>=1.0.0", "pyyaml>=6.0"]
+
+
+
+[project.scripts]
+
+video-fetcher = "video_fetcher.cli:main"
+
+content-hub = "content_hub.cli:main"
+
+
+
+[tool.setuptools.packages.find]
+
+where = ["."]
+
+include = ["video_fetcher*", "content_hub*"]
+

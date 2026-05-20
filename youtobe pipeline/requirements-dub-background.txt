@@ -1,4 +1,0 @@
-# Optional: only when YOUTOBE_DUB_BG_MODE=demucs (AI stem separation)
-# Default duck mode needs only ffmpeg + en.srt (no extra pip packages)
-# PyTorch: https://pytorch.org/get-started/locally/
-demucs>=4.0.1

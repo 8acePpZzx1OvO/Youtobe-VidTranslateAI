@@ -1,0 +1,11 @@
+# 示例：从已有 channel_lists 拉取并进入 content_hub 台账
+
+filters: ../../../content_hub/config/filters.example.yaml
+publish_rules: ../../../content_hub/config/publish_rules.example.yaml
+platforms: ../../../content_hub/config/platforms.example.yaml
+
+subscriptions:
+  - name: laughoverlife_latest5
+    enabled: true
+    target: ../../channel_lists/laughoverlife_latest5.txt
+    limit: 5

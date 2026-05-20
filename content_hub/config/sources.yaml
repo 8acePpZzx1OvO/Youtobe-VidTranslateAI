@@ -1,0 +1,12 @@
+# 复制为 sources.yaml 后修改。路径相对本文件或 content_hub/ 根目录。
+
+filters: config/filters.yaml
+publish_rules: config/publish_rules.yaml
+platforms: config/platforms.yaml
+
+subscriptions:
+  - name: laughoverlife_sample
+    enabled: true
+    # 频道 / 播放列表 / 单条 URL / 本地列表文件
+    target: ../../examples/channel_lists/laughoverlife_latest5.txt
+    limit: 5

@@ -1,0 +1,23 @@
+title_template: "【译制】{title}"
+description_footer: |
+  原视频：{source_url}
+  原频道：{channel}
+  本视频为 AI 配音中英双语译制，仅供学习交流。
+
+tags:
+  - 译制
+  - 双语
+
+attribution:
+  show_source_link: true
+
+limits:
+  max_publish_per_day: 10
+
+bilibili:
+  tid: 171
+  copyright: 2
+  source: ""
+
+weixin_channels:
+  topics: []

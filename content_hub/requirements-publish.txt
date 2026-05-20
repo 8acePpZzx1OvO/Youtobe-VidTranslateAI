@@ -1,0 +1,9 @@
+# content_hub 发布与编排可选依赖（在 pipeline 基础依赖之上安装）
+pyyaml>=6.0
+python-dotenv>=1.0.0
+# Phase 5 定时任务（可选）
+# apscheduler>=3.10.0
+# B站上传（按实际选型取消注释）
+# bilibili-api-python>=16.0.0
+# 视频号浏览器自动化（脆弱，仅在企业 API 不可用时考虑）
+# playwright>=1.40.0

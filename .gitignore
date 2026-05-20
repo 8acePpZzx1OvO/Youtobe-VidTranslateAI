@@ -6,9 +6,21 @@ venv/
 .tools/
 __pycache__/
 *.pyc
+*.egg-info/
+dist/
+build/
 .env
+content_hub/.env
+content_hub/data/*.db
 output/**
 !output/.gitkeep
+pipeline/output/**
+!pipeline/output/.gitkeep
+pipeline/_legacy_backup/
+pipeline/history/
+pipeline/_model_cache/
+pipeline/logs/
+# 旧目录（迁移后可删）
 youtobe pipeline/output/**
 !youtobe pipeline/output/.gitkeep
 vendor/**

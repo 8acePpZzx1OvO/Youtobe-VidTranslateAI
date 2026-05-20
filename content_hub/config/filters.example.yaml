@@ -1,0 +1,16 @@
+# 类型筛选：展开列表后、入队前应用
+
+duration:
+  min_seconds: 60
+  max_seconds: 3600
+
+require_english_subtitle: false
+
+title:
+  include_keywords: []
+  exclude_keywords:
+    - "#shorts"
+    - "live stream"
+
+channel_allowlist: []
+channel_blocklist: []

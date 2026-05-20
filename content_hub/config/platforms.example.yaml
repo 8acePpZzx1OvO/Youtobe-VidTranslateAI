@@ -1,0 +1,16 @@
+platforms:
+  bilibili:
+    enabled: true
+    dry_run_env: CONTENT_HUB_PUBLISH_DRY_RUN
+    credentials:
+      sessdata: BILIBILI_SESSDATA
+      bili_jct: BILIBILI_BILI_JCT
+      dedeuserid: BILIBILI_DEDEUSERID
+
+  weixin_channels:
+    enabled: true
+    dry_run_env: CONTENT_HUB_PUBLISH_DRY_RUN
+    credentials:
+      app_id: WEIXIN_CHANNELS_APP_ID
+      app_secret: WEIXIN_CHANNELS_APP_SECRET
+      access_token: WEIXIN_CHANNELS_ACCESS_TOKEN

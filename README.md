@@ -1,18 +1,18 @@
-# Youtobe VidTranslateAI
+# YouTube Vid Translate
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Repo](https://img.shields.io/badge/GitHub-Youtobe--VidTranslateAI-181717?logo=github)](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
+[![Repo](https://img.shields.io/badge/GitHub-youtube-vid-translate-181717?logo=github)](https://github.com/8acePpZzx1OvO/youtube-vid-translate)
 
 **本机一站式 YouTube 视频译制：下载 → 英文字幕（或 Whisper）→ 英译中 → 双语字幕 → 中文 AI 配音 → 软/硬成片；可选在成片后再导出观看倍速版。**
 
-> 仓库地址：[github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
+> 仓库地址：[github.com/8acePpZzx1OvO/youtube-vid-translate](https://github.com/8acePpZzx1OvO/youtube-vid-translate)
 
 输出默认在 `output/raw/<视频ID>/` 与 `output/processed/<视频ID>/`。翻译与 TTS 可走多家云厂商或免费兜底；下载 YouTube、调用翻译/TTS 接口需本机联网（国内常需配置代理，见 `env.example`）。
 
 ---
 
-## 为什么选择 Youtobe VidTranslateAI？
+## 为什么选择 YouTube Vid Translate？
 
 | 能力 | 说明 |
 |------|------|
@@ -29,69 +29,61 @@
 ### 1. 克隆与虚拟环境
 
 ```powershell
-git clone https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI.git
-cd Youtobe-VidTranslateAI
+git clone https://github.com/8acePpZzx1OvO/youtube-vid-translate.git
+cd youtube-vid-translate
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r "youtobe pipeline/requirements.txt"
-pip install -r "youtobe pipeline/requirements-pro.txt"
+pip install -e ".[pipeline,content-hub]"
+pip install -r "pipeline/requirements.txt"
+# 可选：GPU + WhisperX + Demucs（见 VideoLingo 官方 install.py）
+python pipeline/install.py
 ```
 
-**说明：** 译制主程序在 **`youtobe pipeline/`** 目录下；请在同一终端中 `cd "youtobe pipeline"` 后再执行 `python run.py ...`（见下文「一条命令全流程」）。`requirements-pro.txt` 在基础包之上增加 **faster-whisper**（无字幕时 ASR）与 **static-ffmpeg**（自带 `ffmpeg`/`ffprobe`，供 pydub 与部分脚本使用）。只做「有字幕、不配音」时可只装 `requirements.txt`，但推荐一次性装齐。仓库**不包含**本地目录 `.tools/`（若你自行解压过便携 FFmpeg，勿提交；已在 `.gitignore` 中排除）。
+**说明：** 译制核心为 **[VideoLingo](https://github.com/Huanshere/VideoLingo)**（已集成在 `pipeline/`）。请 `cd pipeline` 后执行 `python run.py ...`。需本机 **FFmpeg**；WhisperX / PyTorch 由 `pipeline/install.py` 安装。
 
 ### 2. 配置环境变量
 
 ```powershell
-copy "youtobe pipeline\env.example" "youtobe pipeline\.env"
-# 用编辑器打开 youtobe pipeline\.env，至少配置一种翻译 Key（见下文「环境变量」）
+copy "pipeline\env.example" "pipeline\.env"
+# 用编辑器打开 pipeline\.env，至少配置一种翻译 Key（见下文「环境变量」）
 ```
 
 ### 3. 一条命令全流程（推荐）
 
 ```powershell
-cd "youtobe pipeline"
+cd "pipeline"
 python run.py "https://www.youtube.com/watch?v=视频ID" --full
 ```
 
-- **`--full`**：等价 `--bilingual --dub-zh`，生成双语 SRT、中文配音、软字幕 MP4 与**硬烧双语+中文配音**成片（默认开启硬烧）。
+- **`--full`**：字幕流程 + 中文配音（VideoLingo 全流程），并导出到 `output/raw|processed/<视频ID>/`。
 
-以下 `python run.py ...` 均假定当前目录为 **`youtobe pipeline`**。
+以下 `python run.py ...` 均假定当前目录为 **`pipeline`**。主配置见 `pipeline/config.yaml`；`pipeline/.env` 中的 `DEEPSEEK_API_KEY` 等会自动同步到 `api` 段。
 
-**无 YouTube 字幕时**（yt-dlp 提示没有字幕轨）：
+**仅字幕、不配音：**
 
 ```powershell
-cd "youtobe pipeline"
-python run.py "https://youtu.be/视频ID" --full --asr-whisper
+python run.py "https://youtu.be/视频ID" --bilingual
 ```
 
-**成片后再导出 1.5× 观看版**（额外生成 `*_x1p5.mp4` 等，**不修改** SRT）：
+**从已有 VideoLingo `output/` 重新导出布局：**
 
 ```powershell
-cd "youtobe pipeline"
-python run.py "https://youtu.be/视频ID" --full --video-speed 1.5
-```
-
-**已有 `en.srt` / `zh.srt`，只补配音与成片：**
-
-```powershell
-cd "youtobe pipeline"
 python run.py --finalize-only 视频ID
 ```
 
+**图形界面（可选）：** `streamlit run st.py`
+
 ---
 
-## 流水线一览（执行顺序）
+## 流水线一览（VideoLingo）
 
 | 阶段 | 做什么 | 主要产物 |
 |------|--------|----------|
-| 1. 下载 | yt-dlp 拉取 MP4（及可用时的英文字幕 VTT） | `output/raw/<id>/<id>.mp4` |
-| 2. 英文字幕 | VTT→SRT；无字幕且 `--asr-whisper` 时用 Whisper 写 `en.srt` | `output/processed/<id>/<id>.en.srt` |
-| 3. 翻译 | `translate_srt.py`，支持断点 `--resume` | `*.zh.srt` |
-| 4. 配音 | `dub_zh.py`（Edge / 火山 / ElevenLabs 等） | `*.dub_zh.m4a`、`*.zh.dubsync.srt`（若启用对齐） |
-| 5. 双语条 | `merge_bilingual_srt.py` | `*.bilingual.srt` |
-| 6. 封装 | `mux_dub_subs.py`（可选软字幕轨） | `*_zh_dub_softsubs.mp4` |
-| 7. 硬烧 | `burn_subtitles.py` | `*_zh_dub_hard_bilingual.mp4`（推荐分享） |
-| 8. 倍速（可选） | `--video-speed ≠ 1.0` 时对**成片**再编码 | `*_x…*.mp4`（见 `scripts/apply_video_playback_speed.py`） |
+| 1. 下载 | yt-dlp | `output/raw/<id>/<id>.mp4` |
+| 2. 转写 | WhisperX 词级对齐 | `output/log` |
+| 3. 翻译 | LLM 多步译制 | `output/trans.srt` |
+| 4. 字幕成片 | 烧录字幕 | `output/output_sub.mp4` |
+| 5. 配音（`--full`） | TTS + 对齐混音 | `output/output_dub.mp4` → `processed/<id>/*_zh_dub_hard_bilingual.mp4` |
 
 ---
 
@@ -151,7 +143,7 @@ python run.py --finalize-only 视频ID
 
 ## 环境变量（`.env`）
 
-完整模板见 **`youtobe pipeline/env.example`**。常用项：
+完整模板见 **`pipeline/env.example`**。常用项：
 
 - **翻译**：`DEEPL_API_KEY`、`MICROSOFT_API_KEY` + `AZURE_TRANSLATOR_REGION`、`OPENAI_API_KEY`、阿里云、腾讯云等（`smart` 优先级见 `env.example` 顶部注释）。
 - **下载**：`YOUTOBE_YTDLP_PROXY`、`YOUTOBE_YTDLP_CONCURRENT_FRAGMENTS` 等。
@@ -163,7 +155,7 @@ python run.py --finalize-only 视频ID
 ## 分步脚本（排错）
 
 ```powershell
-cd "youtobe pipeline"
+cd "pipeline"
 python scripts/download.py "<URL>" -o output/raw
 python scripts/vtt_to_srt.py output/raw/<id>/<id>.en.vtt output/processed/<id>/<id>.en.srt
 python scripts/translate_srt.py output/processed/<id>/<id>.en.srt output/processed/<id>/<id>.zh.srt --engine smart --resume
@@ -185,8 +177,8 @@ python scripts/mux_dub_subs.py output/raw/<id>/<id>.mp4 output/processed/<id>/<i
 
 ## 仓库与协作
 
-- **主页**：[https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI](https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI)
-- **克隆**：`git clone https://github.com/8acePpZzx1OvO/Youtobe-VidTranslateAI.git`
+- **主页**：[https://github.com/8acePpZzx1OvO/youtube-vid-translate](https://github.com/8acePpZzx1OvO/youtube-vid-translate)
+- **克隆**：`git clone https://github.com/8acePpZzx1OvO/youtube-vid-translate.git`
 - 与远程同步：先 `git fetch origin`，再 `git pull origin main --rebase`（有冲突时解决后 `git rebase --continue`），最后 `git push origin main`；国内 HTTPS 常需本机代理（如 `set HTTPS_PROXY=http://127.0.0.1:端口`）。
 
 在 GitHub 仓库页右侧 **About → 编辑** 中，建议将 **Description** 设为（约 350 字以内）：
@@ -197,9 +189,26 @@ python scripts/mux_dub_subs.py output/raw/<id>/<id>.mp4 output/processed/<id>/<i
 
 ---
 
+## 内容分发流（content_hub）
+
+在译配能力之上，增加 **按订阅发现 → 全自动译配 → B站 / 微信视频号发布**（默认 dry-run，不实际上传）。
+
+```powershell
+pip install -e ".[content-hub,pipeline]"
+copy content_hub\.env.example content_hub\.env
+copy content_hub\config\sources.example.yaml content_hub\config\sources.yaml
+
+content-hub run-once --config content_hub/config/sources.yaml
+content-hub discover --config examples/content_hub/sources/laughoverlife.example.yaml
+```
+
+详见 [content_hub/README.md](content_hub/README.md)。
+
+---
+
 ## Claude Code Skill（可选）
 
-将 `youtobe pipeline/skills/youtube-en-to-cn` 复制到 `%USERPROFILE%\.claude\skills\youtube-en-to-cn` 即可在 Claude Code 中引用。
+将 `pipeline/skills/youtube-en-to-cn` 复制到 `%USERPROFILE%\.claude\skills\youtube-en-to-cn` 即可在 Claude Code 中引用。
 
 ---
 

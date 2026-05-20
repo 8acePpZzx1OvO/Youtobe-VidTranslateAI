@@ -1,0 +1,10 @@
+# 单条短视频试跑（从 laughoverlife 列表取一条）
+filters: ../../../content_hub/config/filters.example.yaml
+publish_rules: ../../../content_hub/config/publish_rules.example.yaml
+platforms: ../../../content_hub/config/platforms.example.yaml
+
+subscriptions:
+  - name: single_test
+    enabled: true
+    target: https://www.youtube.com/watch?v=7q-Zidufm9Q
+    limit: 1

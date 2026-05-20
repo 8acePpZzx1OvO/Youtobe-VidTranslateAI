@@ -1,8 +1,0 @@
-# Youtobe Pro: requirements.txt + optional local ASR when YouTube has no subs
--r requirements.txt
-
-faster-whisper>=1.0.0
-# Bundled ffmpeg/ffprobe if not on PATH (dub_zh, pydub, asr)
-static-ffmpeg>=0.2.0
-# Optional Volcengine text translation SDK (main flow uses translate_srt):
-# volcengine-python-sdk>=1.0.0
